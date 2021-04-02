@@ -1,5 +1,7 @@
 # Les ligne commençant par '#' sont des commentaires.
 # Ignorer tous les fichiers html
 *.png
+*.joblib
+*.h5
 # à l'exception de foo.html qui est maintenu à la main
 !maskCar.png

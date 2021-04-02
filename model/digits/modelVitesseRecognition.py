@@ -15,8 +15,7 @@ IMAGE_CHANNELS = 3
 NUM_OUTPUT_CLASSES = 10
 EPOCH = 10
 
-# data_dir = 'dataset/speed/digit/'
-data_dir = '../../dataset/train_races'
+data_dir = 'dataset/speed/digit/'
 
 # Create a train/test base
 train_ds = tf.keras.preprocessing.image_dataset_from_directory(

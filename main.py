@@ -37,7 +37,7 @@ def main():
         # Saving it
         dataset.saveDataset()
     if choice == 3:
-        # d = Drive("model2.h5",'h5',True)
+        # d = Drive("convolution.h5",'h5',True)
         d = Drive('random_forest_big_uncropped.joblib','joblib',True)
         d.start()
 

@@ -61,41 +61,55 @@ class Drive:
                 image = imageOrigin.copy()
 
                 self.dataImage.setImage(image)
-                speed, distances, pos = self.dataImage.getInfos()
-
-                # format data for model
-                distancesFormat = []
-                # speedFormat = [round((speed/500), 3)]
-
-                for i, distance in enumerate(distances):
-                    distance = round((distance / 700), 3)
-                    distancesFormat.append(distance)
-                    if self.showRace and self.displayInfo:
-                        circle(image, (pos[i][0], pos[i][1]), 2, (0,0,255), -1)
-                        putText(image, str(distance), (pos[i][0]-20, pos[i][1]-20), FONT_HERSHEY_COMPLEX_SMALL, 0.5, (0, 0, 255), 1, LINE_AA)
-                        line(image , (pos[i][0], pos[i][1]), (480, 540), (0, 255, 0), 2)
-
-                # inputs = distancesFormat + speedFormat
-                # inputs = expand_dims(inputs, 0)
-                # inputs_dataset = data.Dataset.from_tensor_slices(inputs).batch(1)
-                # predic = self.model.predict(inputs_dataset)[0]
 
                 if(self.modelType == "joblib"):
+                    speed, distances, pos = self.dataImage.getInfos()
+
+                    # format data for model
+                    distancesFormat = []
+                    # speedFormat = [round((speed/500), 3)]
+
+                    for i, distance in enumerate(distances):
+                        distance = round((distance / 700), 3)
+                        distancesFormat.append(distance)
+                        if self.showRace and self.displayInfo:
+                            circle(image, (pos[i][0], pos[i][1]), 2, (0,0,255), -1)
+                            putText(image, str(distance), (pos[i][0]-20, pos[i][1]-20), FONT_HERSHEY_COMPLEX_SMALL, 0.5, (0, 0, 255), 1, LINE_AA)
+                            line(image , (pos[i][0], pos[i][1]), (480, 540), (0, 255, 0), 2)
+
+                    # inputs = distancesFormat + speedFormat
+                    # inputs = expand_dims(inputs, 0)
+                    # inputs_dataset = data.Dataset.from_tensor_slices(inputs).batch(1)
+                    # predic = self.model.predict(inputs_dataset)[0]
+
                     inputs = distances + [speed]
                     predic = self.model.predict([inputs])[0]
+
+                    fps=getTickFrequency()/(getTickCount()-tickmark)
+                    if self.showRace:
+                        putText(image, "FPS: {:05.2f}, speed: {:d}, press TAB to Display infos".format(fps, speed), (10, 30), FONT_HERSHEY_COMPLEX_SMALL, 1, (0, 0, 255), 1)
+                        imshow("Race",image)
+                        waitKey(1)
+
+                    if self.saveName is not None:
+                        self.videoRace.append(image)
+
                 else:
-                    predic = self.model.predict([imageOrigin])[0]
+
+                    imageOrigin2 = imageOrigin[np.newaxis, :]
+
+                    predic = self.model.predict(imageOrigin2)[0]
+                    # predic = [p / 100000000000000 for p in predic]
+                    # predic = np.around(predic,2)
+                    # print("predic", predic)
+
+                    fps=getTickFrequency()/(getTickCount()-tickmark)
+                    if self.showRace:
+                        putText(image, "FPS: {:05.2f}, press TAB to Display infos".format(fps), (10, 30), FONT_HERSHEY_COMPLEX_SMALL, 1, (0, 0, 255), 1)
+                        imshow("Race",image)
+                        waitKey(1)
 
                 self.controllJoystock(predic)
-
-                fps=getTickFrequency()/(getTickCount()-tickmark)
-                if self.showRace:
-                    putText(image, "FPS: {:05.2f}, speed: {:d}, press TAB to Display infos".format(fps, speed), (10, 30), FONT_HERSHEY_COMPLEX_SMALL, 1, (0, 0, 255), 1)
-                    imshow("Race",image)
-                    waitKey(1)
-
-                if self.saveName is not None:
-                    self.videoRace.append(image)
 
     def getScreen(self):
         screen = grab()
