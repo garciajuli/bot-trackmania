@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 
 from sklearn.model_selection import train_test_split
 
+#Hyper parameters
 BATCH_SIZE = 64
 IMAGE_WIDTH = 45
 IMAGE_HEIGHT = 32
@@ -14,8 +15,10 @@ IMAGE_CHANNELS = 3
 NUM_OUTPUT_CLASSES = 10
 EPOCH = 10
 
-data_dir = 'dataset/speed/digit/'
+# data_dir = 'dataset/speed/digit/'
+data_dir = '../../dataset/train_races'
 
+# Create a train/test base
 train_ds = tf.keras.preprocessing.image_dataset_from_directory(
   data_dir,
   validation_split=0.2,
@@ -33,9 +36,6 @@ val_ds = tf.keras.preprocessing.image_dataset_from_directory(
   image_size=(IMAGE_HEIGHT, IMAGE_WIDTH),
   batch_size=BATCH_SIZE)
 
-# class_names = train_ds.class_names
-# print(class_names)
-
 AUTOTUNE = tf.data.experimental.AUTOTUNE
 
 train_ds = train_ds.cache().shuffle(1000).prefetch(buffer_size=AUTOTUNE)
@@ -43,6 +43,7 @@ val_ds = val_ds.cache().prefetch(buffer_size=AUTOTUNE)
 
 normalization_layer = tf.keras.layers.experimental.preprocessing.Rescaling(1./255)
 
+# Our classification model
 model = tf.keras.Sequential([
   tf.keras.layers.experimental.preprocessing.Rescaling(1./255, input_shape=(IMAGE_HEIGHT, IMAGE_WIDTH, IMAGE_CHANNELS)),
   tf.keras.layers.Conv2D(16, 3, padding='same', activation='relu'),

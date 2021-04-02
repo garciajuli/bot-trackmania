@@ -14,24 +14,24 @@ import numpy as np
 from joblib import load
 
 class Drive:
-    MODELPATH = './model/drive/'
-    SAVEPATHROOT = './raceSave/'
 
-    # percent by which the image is resized
-    SCALE_PERCENT = 50
+    def __init__(self, modelName, modelType, showRace, saveName=None):
+        self.modelPath = './model/drive/'
+        self.savePathRoot = './raceSave/'
 
-    def __init__(self, modelName, showRace, saveName=None):
         self.saveName = saveName
         self.showRace = showRace
+        self.modelType = modelType
 
         if self.saveName is not None:
             self.videoRace = []
-            if not isdir(self.SAVEPATHROOT + self.saveName):
+            if not isdir(self.savePathRoot + self.saveName):
                 mkdir(self.saveName)
 
-        # rf = load(MODEL_PATH + '/random_forest_uncropped.joblib')
-        # self.model = load_model(self.MODELPATH + dirNameDevice + modelName)
-        self.model = load(self.MODELPATH + 'random_forest_uncropped.joblib')
+        if(self.modelType == "joblib"):
+            self.model = load(self.modelPath + modelName)
+        else:
+            self.model = load_model(self.modelPath + modelName)
 
         ## init joystick
         self.joystick = pyvjoy.VJoyDevice(1)
@@ -39,9 +39,10 @@ class Drive:
         self.joystick.set_axis(pyvjoy.HID_USAGE_RZ, 0x1)
         self.joystick.set_axis(pyvjoy.HID_USAGE_SL0, 0x1)
 
+        ## Init screen data
         self.dataImage = ScreenData()
         self.run = True
-        self.displayInfo = False
+        self.displayInfo = True
 
     def start(self):
         if self.showRace:
@@ -64,7 +65,7 @@ class Drive:
 
                 # format data for model
                 distancesFormat = []
-                speedFormat = [round((speed/500), 3)]
+                # speedFormat = [round((speed/500), 3)]
 
                 for i, distance in enumerate(distances):
                     distance = round((distance / 700), 3)
@@ -79,9 +80,11 @@ class Drive:
                 # inputs_dataset = data.Dataset.from_tensor_slices(inputs).batch(1)
                 # predic = self.model.predict(inputs_dataset)[0]
 
-                # rf.predict([[460, 389, 347, 304, 287, 270, 267, 268, 269, 287, 304, 347, 383, 454, 0]])
-                inputs = distances + [speed]
-                predic = self.model.predict([inputs])[0]
+                if(self.modelType == "joblib"):
+                    inputs = distances + [speed]
+                    predic = self.model.predict([inputs])[0]
+                else:
+                    predic = self.model.predict([imageOrigin])[0]
 
                 self.controllJoystock(predic)
 
@@ -98,26 +101,13 @@ class Drive:
         screen = grab()
         image = cvtColor(np.array(screen), COLOR_BGR2RGB)
 
-        # #calculate the 50 percent of original dimensions
-        width = int(image.shape[1] * self.SCALE_PERCENT / 100)
-        height = int(image.shape[0] * self.SCALE_PERCENT / 100)
+        # calculate the 50 percent of original dimensions
+        width = int(image.shape[1] * 50 / 100)
+        height = int(image.shape[0] * 50 / 100)
 
         imageScale = resize(image, (width, height))
 
         return imageScale
-    
-    def controllKeyboard(self, predict):
-        print(predict)
-        if predict[0] > 0.5:
-            self.joystick.set_axis(pyvjoy.HID_USAGE_X, 0x1)
-        if predict[1] > 0.5:
-            self.joystick.set_axis(pyvjoy.HID_USAGE_RZ, 0x8000)
-        else:
-            self.joystick.set_axis(pyvjoy.HID_USAGE_RZ, 0x1)
-        if predict[2] > 0.5:
-            self.joystick.set_axis(pyvjoy.HID_USAGE_X, 0x8000)
-        if predict[0] <= 0.5 and predict[2] <= 0.5:
-            self.joystick.set_axis(pyvjoy.HID_USAGE_X, 0x4000)
 
     def controllJoystock(self, predict):
         print("predict : ", predict)
